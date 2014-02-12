@@ -12,7 +12,7 @@
   },
   "description" : "Calculates and returns coefficients for polynomial regression.",
   "homepage": "http://www.drque.net/Projects/PolynomialRegression/",
-  "name" : "dr-queue/polynomial-regression",
+  "name" : "dr-que/polynomial-regression",
   "keywords" : [
     "polynomial",
     "polynomial regression",
