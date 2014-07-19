@@ -21,14 +21,23 @@
 /*   + Forced offset changed to allow any term to be forced.               */
 /*    Unit complete.  Correlation coefficient (r-squared) has been         */
 /*    implemented externally in the demos.                                 */
+/*  1.1 - 2014/05/05 - QUE -                                               */
+/*   + 'interpolate' is now static as it does not need an instance to      */
+/*     operate.  Useful if coefficients have been calculated elsewhere.    */
+/*   - Deprecated 'setDegree' function.  This is the wrong terminology for */
+/*     what the function does.  It actually sets the number of             */
+/*     coefficients for the polynomial.  The degree of the polynomial is   */
+/*     the number of coefficients less one.  Made the identical function   */
+/*     'setNumberOfCoefficient' to replace it.                             */
+/*   + Added getter functions for anything that has a set function.        */
 /*                                                                         */
 /* This project is maintained at:                                          */
-/*    http://www.drque.net/Projects/PolynomialRegression/                  */
+/*    http://PolynomialRegression.drque.net/                               */
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
 /* Polynomial regression class.                                            */
-/* Copyright (C) 2009, 2012-2013 Andrew Que                                */
+/* Copyright (C) 2009, 2012-2014 Andrew Que                                */
 /*                                                                         */
 /* This program is free software: you can redistribute it and/or modify    */
 /* it under the terms of the GNU General Public License as published by    */
@@ -45,9 +54,9 @@
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
-/*                      (C) Copyright 2009, 2012-2013                      */
+/*                      (C) Copyright 2009, 2012-2014                      */
 /*                               Andrew Que                                */
-/*                                   ð|>                                   */
+/*                                   Ã°|>                                   */
 /*=========================================================================*/
 /**
  * Polynomial regression.
@@ -58,9 +67,10 @@
  *
  * @package PolynomialRegression
  * @author Andrew Que ({@link http://www.DrQue.net/})
- * @copyright Copyright (c) 2009, 2012-2013, Andrew Que
+ * @link http://PolynomialRegression.drque.net/ Project home page.
+ * @copyright Copyright (c) 2009, 2012-2014, Andrew Que
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @version 1.0
+ * @version 1.1
  */
 
 namespace DrQue;
@@ -88,23 +98,25 @@ namespace DrQue;
  *
  *
  * @package PolynomialRegression
+ * @link http://PolynomialRegression.drque.net/ Project home page.
  */
 class PolynomialRegression
 {
-  private $X_Powers;
-  private $XY_Powers;
-  private $degree;
+  private $xPowers;
+  private $xyPowers;
+  private $numberOfCoefficient;
   private $forcedValue;
 
   /**
    * Constructor
    *
    * Create new class.
-   * @param int $degree Degree + 1 of polynomial.
+   * @param int $numberOfCoefficient Number of coefficients in polynomial (degree
+   *   of polynomial + 1).
    */
-  public function __construct( $degree = 3 )
+  public function __construct( $numberOfCoefficient = 3 )
   {
-    $this->degree = $degree;
+    $this->numberOfCoefficient = $numberOfCoefficient;
     $this->reset();
 
   } // __construct
@@ -113,39 +125,72 @@ class PolynomialRegression
    * Reset data.
    *
    * Clear all internal data and prepare for new calculation.
-   * Must be called *after* setDegree if degree is changed.
+   * Must be called *after* setNumberOfCoefficient if number of coefficients has
+   * changed.
    */
   public function reset()
   {
     $this->forcedValue = array();
-    $this->X_Powers = array();
-    $this->XY_Powers = array();
+    $this->xPowers = array();
+    $this->xyPowers = array();
 
-    $squares = ( $this->degree - 1 ) * 2;
+    $squares = ( $this->numberOfCoefficient - 1 ) * 2;
 
     // Initialize power arrays.
     for ( $index = 0; $index <= $squares; ++$index )
     {
-      $this->X_Powers[ $index ] = 0;
-      $this->XY_Powers[ $index ] = 0;
+      $this->xPowers[ $index ] = 0;
+      $this->xyPowers[ $index ] = 0;
     }
 
   } // reset
 
   /**
-   * Set degree.
+   * Set degree (Deprecated).
    *
-   * This is the maximum degree polynomial function that will be
-   * calculated.  Note that the request for coefficients can be lower
-   * then this value.  If degree is higher, data must be reset and
+   * This is the maximum number of coefficients the polynomial function that
+   * will be calculate.  Note that the request for coefficients can be lower
+   * then this value.  If number is higher, data must be reset and
    * added again.
-   * @param int $degree Max degree
+   * @param int $numberOfCoefficient Number of coefficients.
+   * @deprecated Deprecated in version 1.1 because the name doesn't reflect what
+   *   the function actually does.  Use 'setNumberOfCoefficient' instead--operations
+   *   are identical.
    */
-  public function setDegree( $degree )
+  public function setDegree( $numberOfCoefficient )
   {
-    $this->degree = $degree;
+    $this->numberOfCoefficient = $numberOfCoefficient;
 
   } // setDegree
+
+  /**
+   * Set the number of coefficients to calculate.
+   *
+   * This is the maximum number of coefficients the polynomial function that
+   * will be calculate.  Note that the request for coefficients can be lower
+   * then this value.  If number is higher, data must be reset and
+   * added again.
+   * @param int $numberOfCoefficient Number of coefficients.
+   * @since Version 1.1
+   */
+  public function setNumberOfCoefficient( $numberOfCoefficient )
+  {
+    $this->numberOfCoefficient = $numberOfCoefficient;
+
+  } // setNumberOfCoefficient
+
+  /**
+   * Get the number of coefficients to calculate.
+   *
+   * Returns the number of coefficients calculated.
+   * @return int Number of coefficients.
+   * @since Version 1.1
+   */
+  public function getNumberOfCoefficient( $numberOfCoefficient )
+  {
+    return $this->numberOfCoefficient;
+
+  } // getnumberOfCoefficient
 
   /**
    * Set a forced coefficient.
@@ -154,13 +199,33 @@ class PolynomialRegression
    * Most often used to force an offset of zero, but can be used to set any
    * known coefficient for a set of data.
    * @param int $coefficient Which coefficient to force.
-   * @param int $value Value to force this coefficient.
+   * @param float $value Value to force this coefficient.
+   * @since Version 1.0
    */
   public function setForcedCoefficient( $coefficient, $value )
   {
     $this->forcedValue[ $coefficient ] = $value;
 
   } // setForcedCoefficient
+
+  /**
+   * Get a forced coefficient.
+   *
+   * Get a previously set forced coefficient.
+   * @param int $coefficient Which coefficient.
+   * @return float Value of this force this coefficient.  Null if the
+   *   coefficient isn't being forced.
+   * @since Version 1.1
+   */
+  public function getForcedCoefficient( $coefficient, $value )
+  {
+    $result = null;
+    if ( isset( $this->forcedValue[ $coefficient ] ) )
+      $result = $this->forcedValue[ $coefficient ];
+
+    return $result;
+
+  } // getForcedCoefficient
 
   /**
    * Add data.
@@ -171,7 +236,7 @@ class PolynomialRegression
    */
   public function addData( $x, $y )
   {
-    $squares = ( $this->degree - 1 ) * 2;
+    $squares = ( $this->numberOfCoefficient - 1 ) * 2;
 
     // Remove the effect of the forced coefficient from this value.
     foreach ( $this->forcedValue as $coefficient => $value )
@@ -184,13 +249,13 @@ class PolynomialRegression
     // Accumulate new data to power sums.
     for ( $index = 0; $index <= $squares; ++$index )
     {
-      $this->X_Powers[ $index ] =
-        bcadd( $this->X_Powers[ $index ], bcpow( $x, $index ) );
+      $this->xPowers[ $index ] =
+        bcadd( $this->xPowers[ $index ], bcpow( $x, $index ) );
 
-      $this->XY_Powers[ $index ] =
+      $this->xyPowers[ $index ] =
         bcadd
         (
-          $this->XY_Powers[ $index ],
+          $this->xyPowers[ $index ],
           bcmul( $y, bcpow( $x, $index ) )
         );
     }
@@ -201,15 +266,15 @@ class PolynomialRegression
    * Get coefficients.
    *
    * Calculate and return coefficients based on current data.
-   * @param int $degree Integer value of the degree polynomial desired.  Default
-   *                    is -1 which is the max degree set by class.
+   * @param int $numberOfCoefficient Integer value of the degree polynomial desired.  Default
+   *    is -1 which is the max number of coefficients set by class.
    * @return array Array of coefficients (as BC strings).
    */
-  public function getCoefficients( $degree = -1 )
+  public function getCoefficients( $numberOfCoefficient = -1 )
   {
-    // If no degree specified, use standard.
-    if ( $degree == -1 )
-      $degree = $this->degree;
+    // If no number of coefficients specified, use standard.
+    if ( $numberOfCoefficient == -1 )
+      $numberOfCoefficient = $this->numberOfCoefficient;
 
     // Build a matrix.
     // The matrix is made up of the sum of powers.  So if the number represents the power,
@@ -221,17 +286,17 @@ class PolynomialRegression
     //     [ 4 5 6 7 8 ]
     //
     $matrix = array();
-    for ( $row = 0; $row < $degree; ++$row )
+    for ( $row = 0; $row < $numberOfCoefficient; ++$row )
     {
       $matrix[ $row ] = array();
-      for ( $column = 0; $column < $degree; ++$column )
+      for ( $column = 0; $column < $numberOfCoefficient; ++$column )
         $matrix[ $row ][ $column ] =
-          $this->X_Powers[ $row + $column ];
+          $this->xPowers[ $row + $column ];
     }
 
     // Create augmented matrix by adding X*Y powers.
-    for ( $row = 0; $row < $degree; ++$row )
-      $matrix[ $row ][ $degree ] = $this->XY_Powers[ $row ];
+    for ( $row = 0; $row < $numberOfCoefficient; ++$row )
+      $matrix[ $row ][ $numberOfCoefficient ] = $this->xyPowers[ $row ];
 
     // Add in the forced coefficients.  This is done by nulling the row and column
     // for each forced coefficient.  For example, a 3th degree polynomial
@@ -242,14 +307,14 @@ class PolynomialRegression
     //       [ d e f g z ]      [ d 0 f g z ]
     foreach ( $this->forcedValue as $coefficient => $value )
     {
-      for ( $index = 0; $index < $degree; ++$index )
+      for ( $index = 0; $index < $numberOfCoefficient; ++$index )
       {
         $matrix[ $index ][ $coefficient ] = "0";
         $matrix[ $coefficient ][ $index ] = "0";
       }
 
       $matrix[ $coefficient ][ $coefficient ] = "1";
-      $matrix[ $coefficient ][ $degree ]      = $value;
+      $matrix[ $coefficient ][ $numberOfCoefficient ]      = $value;
     }
 
     // Determine number of rows in matrix.
@@ -366,17 +431,20 @@ class PolynomialRegression
   /**
    * Interpolate
    *
-   * Return y point for given x and coefficient set.
+   * Return y point for given x and coefficient set.  Function is static as it
+   * does not require any instance data to operate.
    * @param array $coefficients Coefficients as calculated by 'getCoefficients'.
    * @param float $x X-coordinate from which to calculate Y.
    * @return float Y-coordinate (as floating-point).
    */
-  public function interpolate( $coefficients, $x )
+  static public function interpolate( $coefficients, $x )
   {
-    $degree = count( $coefficients );
+    $numberOfCoefficient = count( $coefficients );
 
     $y = 0;
-    for ( $coefficentIndex = 0; $coefficentIndex < $degree; ++$coefficentIndex )
+    for ( $coefficentIndex = 0; $coefficentIndex < $numberOfCoefficient; ++$coefficentIndex )
+    {
+      // y += coefficients[ coefficentIndex ] * x^coefficentIndex
       $y =
         bcadd
         (
@@ -387,9 +455,12 @@ class PolynomialRegression
             bcpow( $x, $coefficentIndex )
           )
         );
+    }
 
     return floatval( $y );
 
   } // interpolate
 
 } // Class
+
+// "Progress for the tick is not progress for the dog." -- Mencius Moldbug
