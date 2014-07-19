@@ -186,7 +186,7 @@ class PolynomialRegression
    * @return int Number of coefficients.
    * @since Version 1.1
    */
-  public function getNumberOfCoefficient( $numberOfCoefficient )
+  public function getNumberOfCoefficient()
   {
     return $this->numberOfCoefficient;
 
@@ -217,7 +217,7 @@ class PolynomialRegression
    *   coefficient isn't being forced.
    * @since Version 1.1
    */
-  public function getForcedCoefficient( $coefficient, $value )
+  public function getForcedCoefficient( $coefficient )
   {
     $result = null;
     if ( isset( $this->forcedValue[ $coefficient ] ) )
