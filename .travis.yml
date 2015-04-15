@@ -8,6 +8,10 @@ php:
   - 7
   - hhvm
 
+branches:
+  only:
+    - master
+
 before_script:
   - composer install
 
