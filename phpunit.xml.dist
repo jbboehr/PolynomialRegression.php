@@ -2,7 +2,7 @@
 
 <phpunit backupGlobals="false"
          backupStaticAttributes="false" 
-         bootstrap="bootstrap.php"
+         bootstrap="tests/bootstrap.php"
          cacheTokens="true"
          colors="false"
          convertErrorsToExceptions="true"
@@ -15,16 +15,16 @@
          
   <testsuites>
     <testsuite name="Polynomial Regression Test">
-      <file>./PolynomialRegression.Test.php</file>
+      <directory>./tests/</directory>
     </testsuite>
   </testsuites>
   
   <filter>
     <blacklist>
-      <directory>../vendor</directory>
-      <directory>../doc</directory>
-      <directory>../reports</directory>
-      <directory>../tests</directory>
+      <directory>./vendor</directory>
+      <directory>./doc</directory>
+      <directory>./reports</directory>
+      <directory>./tests</directory>
     </blacklist>
   </filter>
 </phpunit>
