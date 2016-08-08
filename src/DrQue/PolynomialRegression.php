@@ -473,7 +473,7 @@ class PolynomialRegression
    *  
    *  @author Konstantinos Magarisiotis
    */
-  public function RSquared($data = [], $coefficients = [])
+  public function RSquared($data = array(), $coefficients = array())
   {
   	// Get average of Y-data.
   	$Y_Average = 0.0;
