@@ -460,6 +460,81 @@ class PolynomialRegression
     return floatval( $y );
 
   } // interpolate
+  
+  
+  
+  /**
+   *  08 August, 2016
+   *  Calculate the R-Squared.
+   *  R2 shows how well terms (data points) fit a curve or line. 
+   *  
+   *  @param array $data
+   *  @param array $coefficients
+   *  
+   *  @author Konstantinos Magarisiotis
+   */
+  public function RSquared($data = array(), $coefficients = array())
+  {
+  	// Get average of Y-data.
+  	$Y_Average = 0.0;
+  	foreach ($data as $dataPoint) {
+  		$Y_Average += $dataPoint[1];
+  	}
+  	
+  	$Y_Average /= count($data);
+  	
+  	// Calculate R Squared.
+  	$Y_MeanSum = 0.0;
+  	$Y_ErrorSum = 0.0;
+  	foreach ($data as $dataPoint) {
+  		$x = $dataPoint[0];
+  		$y = $dataPoint[1];
+  		$error = $y;
+  		$error -= $this->interpolate($coefficients, $x);
+  		$Y_ErrorSum += $error * $error;
+  	
+  		$error = $y;
+  		$error -= $Y_Average;
+  		$Y_MeanSum += $error * $error;
+  	}
+  	
+  	$R_Squared = 1.0 - ( $Y_ErrorSum / $Y_MeanSum );
+  	
+  	return $R_Squared;
+  }
+  
+  
+  /**
+   *  08 August, 2016
+   *  Calculate the 'Adjusted R Squared'.
+   *  
+   *  Adjusted R2 also indicates how well terms fit a curve or line, 
+   *  but adjusts for the number of terms in a model. 
+   *  If you add more and more useless variables to a model, adjusted r-squared will decrease. 
+   *  If you add more useful variables, adjusted r-squared will increase.
+   *  
+   *  http://www.statisticshowto.com/adjusted-r2/
+   *  http://blog.minitab.com/blog/adventures-in-statistics/multiple-regession-analysis-use-adjusted-r-squared-and-predicted-r-squared-to-include-the-correct-number-of-variables
+   *  
+   *  @param number $r2
+   *  @param number $predictors
+   *  @param number $sample_size
+   *  
+   *  @author Konstantinos Magarisiotis
+   */
+  public function RAdjusted($r2, $predictors, $sample_size)
+  {
+  	$radjusted = 0;
+  	
+  	if(($sample_size - $predictors - 1) != 0)
+  		$radjusted = 1 - ((1-$r2)*($sample_size-1))/($sample_size - $predictors - 1);
+  	else 
+  		$radjusted = 1;
+  	
+  	return $radjusted;
+  }
+  
+  
 
 } // Class
 
