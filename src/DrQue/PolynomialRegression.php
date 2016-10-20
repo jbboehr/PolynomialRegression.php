@@ -103,29 +103,41 @@ namespace DrQue;
  */
 class PolynomialRegression
 {
-    /** @internal Array of running sum of x^n. */
+    /**
+     * @var array Array of running sum of x^n.
+     */
     private $xPowers;
 
-    /** @internal Array of running sum of x*y powers. */
+    /**
+     * @var array Array of running sum of x*y powers.
+     */
     private $xyPowers;
 
-    /** @internal Number of coefficients. */
+    /**
+     * @var integer Number of coefficients.
+     */
     private $numberOfCoefficient;
 
-    /** @internal Array of forcing terms. */
+    /**
+     * @var array Array of forcing terms.
+     */
     private $forcedValue;
 
-    /** @internal The index of the current element.  Basiclly a count of data added. */
+    /**
+     * @var integer The index of the current element.  Basiclly a count of data added.
+     */
     private $index = 0;
 
-    /** @internal The weighting interface.  NULL is unused. */
-    private $weightingInterface = NULL;
+    /**
+     * @var WeightingInterface The weighting interface or NULL is unused
+     */
+    private $weightingInterface;
 
     /**
      * Constructor
      *
      * Create new class.
-     * @param $numberOfCoefficient Number of coefficients in polynomial (degree
+     * @param integer $numberOfCoefficient Number of coefficients in polynomial (degree
      *   of polynomial + 1).
      */
     public function __construct( $numberOfCoefficient = 3 )
@@ -262,8 +274,7 @@ class PolynomialRegression
      *
      * Return the current weighting interface being used.  Returns NULL if no
      * interface is used.
-     * @param WeightingInterface $weightingInterface Instance of weighting system
-     *   to be used.
+     * @return WeightingInterface
      * @since Version 1.2
      */
     public function getWeighting()
@@ -285,8 +296,9 @@ class PolynomialRegression
         // Get weighting term for this index.
         $this->index += 1;
         $weight = NULL;
-        if ( NULL !== $this->weightingInterface )
-            $weight = $this->weightingInterface->getWeight( $this->index );
+        if ( NULL !== $this->weightingInterface ) {
+            $weight = $this->weightingInterface->getWeight($this->index);
+        }
 
         // Remove the effect of the forced coefficient from this value.
         foreach ( $this->forcedValue as $coefficient => $value )
@@ -526,6 +538,7 @@ class PolynomialRegression
      *
      *  @param array $data
      *  @param array $coefficients
+     *  @return float
      *
      *  @author Konstantinos Magarisiotis
      */
@@ -574,17 +587,17 @@ class PolynomialRegression
      *  @param number $r2
      *  @param number $predictors
      *  @param number $sample_size
+     *  @return float
      *
      *  @author Konstantinos Magarisiotis
      */
     public function RAdjusted($r2, $predictors, $sample_size)
     {
-        $radjusted = 0;
-
-        if(($sample_size - $predictors - 1) != 0)
-            $radjusted = 1 - ((1-$r2)*($sample_size-1))/($sample_size - $predictors - 1);
-        else
-            $radjusted = 1;
+        if( ($sample_size - $predictors - 1) != 0 ) {
+            $radjusted = 1 - ((1 - $r2) * ($sample_size - 1)) / ($sample_size - $predictors - 1);
+        } else {
+            $radjusted = 1.0;
+        }
 
         return $radjusted;
     }
