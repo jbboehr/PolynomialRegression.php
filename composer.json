@@ -6,8 +6,8 @@
     }
   ],
   "autoload" : {
-    "psr-0" : {
-      "DrQue": "src/"
+    "psr-4" : {
+      "DrQue\\": "src/"
     }
   },
   "description" : "Calculates and returns coefficients for polynomial regression.",
