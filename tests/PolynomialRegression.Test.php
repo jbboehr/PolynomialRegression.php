@@ -1,6 +1,6 @@
 <?php
 
-use \DrQue\PolynomialRegression;
+use DrQue\PolynomialRegression;
 
 class Model_Test extends PHPUnit_Framework_TestCase
 {
