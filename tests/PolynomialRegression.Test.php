@@ -4,16 +4,15 @@ use DrQue\PolynomialRegression;
 
 class Model_Test extends PHPUnit_Framework_TestCase
 {
-    
     public function testSetNumberOfCoefficent()
     {
         $polynomialRegression = new PolynomialRegression(4);
         $polynomialRegression->setNumberOfCoefficient(2);
-        
+
         $this->assertEquals(2, $polynomialRegression->getNumberOfCoefficient());
-        
+
         $polynomialRegression->setDegree(3);
-        
+
         $this->assertEquals(3, $polynomialRegression->getNumberOfCoefficient());
     }
 
@@ -45,23 +44,23 @@ class Model_Test extends PHPUnit_Framework_TestCase
             array(0.88, 117.777915259186), array(0.90, 108.621331147219),
             array(0.92, 112.979639159754), array(0.94, 122.065499190418),
             array(0.96, 116.136221596622), array(0.98, 111.215762010712),
-            array(1.00, 122.743302375187)
+            array(1.00, 122.743302375187),
         );
 
-        // Precision digits in BC math. 
+        // Precision digits in BC math.
         bcscale(10);
 
-        // Start a regression class of order 2--linear regression. 
+        // Start a regression class of order 2--linear regression.
         $PolynomialRegression = new PolynomialRegression(2);
 
-        // Add all the data to the regression analysis. 
+        // Add all the data to the regression analysis.
         foreach ($data as $dataPoint) {
             $PolynomialRegression->addData($dataPoint[0], $dataPoint[1]);
         }
 
-        // Get coefficients for the polynomial. 
+        // Get coefficients for the polynomial.
         $coefficients = $PolynomialRegression->getCoefficients();
-        
+
         $this->assertEquals(2, $PolynomialRegression->getNumberOfCoefficient());
         $this->assertEquals(95.75, round($coefficients[1], 2));
         $this->assertEquals(26.55, round($coefficients[0], 2));
@@ -69,8 +68,8 @@ class Model_Test extends PHPUnit_Framework_TestCase
 
     public function testThirdDegreePolynomial()
     {
-        // Data created in a spreadsheet with some random scatter.  True function should be: 
-        //   f( x ) = 0.65 + 0.6 x - 6.25 x^2 + 6 x^3 
+        // Data created in a spreadsheet with some random scatter.  True function should be:
+        //   f( x ) = 0.65 + 0.6 x - 6.25 x^2 + 6 x^3
         $data = array(
             array(0.00, 0.65646507), array(0.05, 0.61435503),
             array(0.10, 0.63151965), array(0.15, 0.57711365),
@@ -82,16 +81,16 @@ class Model_Test extends PHPUnit_Framework_TestCase
             array(0.70, 0.11196788), array(0.75, 0.15086596),
             array(0.80, 0.19979455), array(0.85, 0.34683801),
             array(0.90, 0.48338650), array(0.95, 0.59196113),
-            array(1.00, 0.99233320)
+            array(1.00, 0.99233320),
         );
 
-        // Precision digits in BC math. 
+        // Precision digits in BC math.
         bcscale(10);
 
-        // Start a regression class with a maximum of 4rd degree polynomial. 
+        // Start a regression class with a maximum of 4rd degree polynomial.
         $polynomialRegression = new PolynomialRegression(4);
 
-        // Add all the data to the regression analysis. 
+        // Add all the data to the regression analysis.
         foreach ($data as $dataPoint) {
             $polynomialRegression->addData($dataPoint[0], $dataPoint[1]);
         }
@@ -107,7 +106,6 @@ class Model_Test extends PHPUnit_Framework_TestCase
 
     public function testCalculatingRSquared()
     {
-
         $data = array(
             array(0.00, 27.3834562958158), array(0.02, 38.2347360741764),
             array(0.04, 42.5632501679666), array(0.06, 19.4638760104114),
@@ -134,35 +132,36 @@ class Model_Test extends PHPUnit_Framework_TestCase
             array(0.88, 117.777915259186), array(0.90, 108.621331147219),
             array(0.92, 112.979639159754), array(0.94, 122.065499190418),
             array(0.96, 116.136221596622), array(0.98, 111.215762010712),
-            array(1.00, 122.743302375187)
+            array(1.00, 122.743302375187),
         );
 
-        // Precision digits in BC math. 
+        // Precision digits in BC math.
         bcscale(10);
 
-        // Start a regression class of order 2--linear regression. 
+        // Start a regression class of order 2--linear regression.
         $leastSquareRegression = new PolynomialRegression(2);
 
-        // Add all the data to the regression analysis. 
+        // Add all the data to the regression analysis.
         foreach ($data as $dataPoint) {
             $leastSquareRegression->addData($dataPoint[0], $dataPoint[1]);
         }
 
-        // Get coefficients for the polynomial. 
+        // Get coefficients for the polynomial.
         $coefficients = $leastSquareRegression->getCoefficients();
 
-        // 
-        // Get average of Y-data. 
-        // 
+        //
+        // Get average of Y-data.
+        //
         $Y_Average = 0.0;
-        foreach ($data as $dataPoint)
+        foreach ($data as $dataPoint) {
             $Y_Average += $dataPoint[1];
+        }
 
         $Y_Average /= count($data);
 
-        // 
-        // Calculate R Squared. 
-        // 
+        //
+        // Calculate R Squared.
+        //
 
         $Y_MeanSum = 0.0;
         $Y_ErrorSum = 0.0;
@@ -178,7 +177,7 @@ class Model_Test extends PHPUnit_Framework_TestCase
             $Y_MeanSum += $error * $error;
         }
 
-        $R_Squared = 1.0 - ( $Y_ErrorSum / $Y_MeanSum );
+        $R_Squared = 1.0 - ($Y_ErrorSum / $Y_MeanSum);
 
         $this->assertEquals(0.93, round($R_Squared, 2));
     }
@@ -198,22 +197,22 @@ class Model_Test extends PHPUnit_Framework_TestCase
             array(0.95, 0.7391285236), array(1.00, 0.9012208138),
         );
 
-        // Precision digits in BC math. 
+        // Precision digits in BC math.
         bcscale(10);
 
-        // Start a regression class of order 4, one with no forcing coefficients, 
-        // one with two forced coefficients. 
+        // Start a regression class of order 4, one with no forcing coefficients,
+        // one with two forced coefficients.
         $regression1 = new PolynomialRegression(2);
         $regression2 = new PolynomialRegression(2);
         $regression2->setForcedCoefficient(0, 0);
 
-        // Add all the data to both regression analysis. 
+        // Add all the data to both regression analysis.
         foreach ($data as $dataPoint) {
             $regression1->addData($dataPoint[0], $dataPoint[1]);
             $regression2->addData($dataPoint[0], $dataPoint[1]);
         }
 
-        // Get coefficients for the polynomial. 
+        // Get coefficients for the polynomial.
         $coefficients1 = $regression1->getCoefficients();
         $coefficients2 = $regression2->getCoefficients();
 
@@ -236,46 +235,84 @@ class Model_Test extends PHPUnit_Framework_TestCase
             array(0.70, 0.54765807), array(0.75, 0.41625294),
             array(0.80, 0.78163483), array(0.85, 0.71306009),
             array(0.90, 0.53515664), array(0.95, 0.98918384),
-            array(1.00, 0.93061202)
+            array(1.00, 0.93061202),
         );
 
-        // The actual coefficients for the above data (without noise). 
+        // The actual coefficients for the above data (without noise).
         $trueCoefficients = array(0.9, -2, 0.6, 1.5);
 
-        // Precision digits in BC math. 
+        // Precision digits in BC math.
         bcscale(10);
 
-        // Start a regression class of order 4, one with no forcing coefficients, 
-        // one with two forced coefficients. 
+        // Start a regression class of order 4, one with no forcing coefficients,
+        // one with two forced coefficients.
         $regression1 = new PolynomialRegression(4);
         $regression2 = new PolynomialRegression(4);
         $regression2->setForcedCoefficient(1, -2);
         $regression2->setForcedCoefficient(3, 1.5);
-        
-        
+
         $this->assertEquals(-2, $regression2->getForcedCoefficient(1));
         $this->assertEquals(1.5, $regression2->getForcedCoefficient(3));
-        
 
-        // Add all the data to both regression analysis. 
+        // Add all the data to both regression analysis.
         foreach ($data as $dataPoint) {
             $regression1->addData($dataPoint[0], $dataPoint[1]);
             $regression2->addData($dataPoint[0], $dataPoint[1]);
         }
 
-        // Get coefficients for the polynomial. 
+        // Get coefficients for the polynomial.
         $coefficients1 = $regression1->getCoefficients();
         $coefficients2 = $regression2->getCoefficients();
-        
+
         $this->assertEquals(0.72, round($coefficients1[0], 2));
         $this->assertEquals(-1.30, round($coefficients1[1], 2));
         $this->assertEquals(0.35, round($coefficients1[2], 2));
         $this->assertEquals(1.25, round($coefficients1[3], 2));
-        
+
         $this->assertEquals(0.86, round($coefficients2[0], 2));
         $this->assertEquals(-2.00, round($coefficients2[1], 2));
         $this->assertEquals(0.76, round($coefficients2[2], 2));
         $this->assertEquals(1.50, round($coefficients2[3], 2));
     }
 
+    public function testWithMoreCoefficientThanXValues()
+    {
+        $data = array(
+            array(1, 20), array(2, 40),  array(3, 30), array(4, 100),
+        );
+
+        // Precision digits in BC math.
+        bcscale(10);
+
+        // Start a regression class of order 5--linear regression.
+        $PolynomialRegression = new PolynomialRegression(5);
+
+        // Add all the data to the regression analysis.
+        foreach ($data as $dataPoint) {
+            $PolynomialRegression->addData($dataPoint[0], $dataPoint[1]);
+        }
+
+        // Get coefficients for the polynomial.
+        $coefficients = $PolynomialRegression->getCoefficients();
+
+        $this->assertEquals(5, $PolynomialRegression->getNumberOfCoefficient());
+        $this->assertEquals(-140, round($coefficients[0], 2));
+        $this->assertEquals(266.67, round($coefficients[1], 2));
+        $this->assertEquals(-125, round($coefficients[2], 2));
+        $this->assertEquals(18.33, round($coefficients[3], 2));
+        $this->assertEquals(0, round($coefficients[4], 2));
+    }
+
+    public function testWithNoData()
+    {
+        // Start a regression class of order 2--linear regression.
+        $PolynomialRegression = new PolynomialRegression(2);
+
+        // Get coefficients for the polynomial.
+        $coefficients = $PolynomialRegression->getCoefficients();
+
+        $this->assertEquals(2, $PolynomialRegression->getNumberOfCoefficient());
+        $this->assertEquals(0, $coefficients[0]);
+        $this->assertEquals(0, $coefficients[1]);
+    }
 }

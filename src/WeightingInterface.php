@@ -1,10 +1,12 @@
 <?php
 /**
- * @package PolynomialRegression
  * @author Andrew Que ({@link http://www.DrQue.net/})
- * @link http://PolynomialRegression.drque.net/ Project home page.
+ *
+ * @see http://PolynomialRegression.drque.net/ Project home page.
+ *
  * @copyright Copyright (c) 2009, 2012-2015, Andrew Que
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
+ *
  * @version 1.2.1
  */
 
@@ -28,5 +30,5 @@ interface WeightingInterface
      *
      * @param int $index Current index for which to return weighting term.
      */
-    public function getWeight( $index );
+    public function getWeight($index);
 }
