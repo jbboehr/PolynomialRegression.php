@@ -2,7 +2,7 @@
 
 use DrQue\PolynomialRegression;
 
-class Model_Test extends PHPUnit_Framework_TestCase
+class Model_Test extends \PHPUnit\Framework\TestCase
 {
     
     public function testSetNumberOfCoefficent()

@@ -2,7 +2,7 @@
 
 use DrQue\PolynomialRegression;
 
-class RSquaredTest extends PHPUnit_Framework_TestCase
+class RSquaredTest extends \PHPUnit\Framework\TestCase
 {
 	public function testRsquared()
 	{
