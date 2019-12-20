@@ -52,7 +52,7 @@ class RSquaredTest extends \PHPUnit\Framework\TestCase
 		
 		$rsquared = $leastSquareRegression->RSquared($data, $coefficients);
 		
-		$this->assertEquals(0.926, $rsquared, '', 0.001);
+		$this->assertEqualsWithDelta(0.926, $rsquared, 0.001);
 	}
 	
 	
@@ -107,7 +107,7 @@ class RSquaredTest extends \PHPUnit\Framework\TestCase
 		
 		$radjusted = $leastSquareRegression->RAdjusted($rsquared, 1, count($data));
 	
-		$this->assertEquals(0.924, $radjusted, '', 0.001);
+		$this->assertEqualsWithDelta(0.924, $radjusted, 0.001);
 	}
 	
 }
