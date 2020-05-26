@@ -18,8 +18,8 @@ branches:
     - ci
 
 before_script:
-  - composer install
+  - composer install --dev
 
 script:
-  - phpunit --coverage-text
+  - ./vendor/bin/phpunit --coverage-text
 
