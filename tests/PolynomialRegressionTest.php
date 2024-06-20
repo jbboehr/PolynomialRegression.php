@@ -1,8 +1,11 @@
 <?php
 
-use DrQue\PolynomialRegression;
+namespace DrQue\PolynomialRegression\Tests;
 
-class Model_Test extends \PHPUnit\Framework\TestCase
+use DrQue\PolynomialRegression;
+use PHPUnit\Framework\TestCase;
+
+class PolynomialRegressionTest extends TestCase
 {
     
     public function testSetNumberOfCoefficent()

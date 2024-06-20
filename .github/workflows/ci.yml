@@ -1,37 +1,116 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - master
-      - github-actions
-      - ci
-  pull_request:
-    branches:
-      - master
+    push:
+        branches:
+            - master
+            - develop
+            - ci
+    pull_request:
+        branches:
+            - master
+
+permissions:
+    contents: read
 
 jobs:
-  run:
-    runs-on: ${{ matrix.operating-system }}
-    strategy:
-      matrix:
-        operating-system: [ubuntu-latest, windows-latest, macos-latest]
-        php-versions: ["7.3", "7.4", "8.0"]
-    name: PHP ${{ matrix.php-versions }} Test on ${{ matrix.operating-system }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+    lint:
+        runs-on: ubuntu-latest
+        name: "Lint | PHP ${{ matrix.php-version }}"
+        strategy:
+            matrix:
+                php-version:
+                    - "8.1"
+                    - "8.2"
+                    - "8.3"
+#                include:
+#                    - php-version: "8.4"
+#                      allow-failure: "true"
+#        continue-on-error: ${{ matrix.allow-failure == 'true' }}
+        steps:
+            -   uses: actions/checkout@v4
 
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-versions }}
-          extensions: bcmath
-          coverage: xdebug
-          tools: phpunit
+            -   name: Install PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: "none"
+                    php-version: "${{ matrix.php-version }}"
+                    tools: composer:v2
+                    extensions: bcmath, gmp
 
-      - name: Install Composer dependencies
-        run: composer install --no-progress --prefer-dist --optimize-autoloader --no-dev
+            -   name: Validate composer.json and composer.lock
+                run: composer validate --strict
 
-      - name: PHP test
-        run: phpunit
+            -   name: Cache Composer packages
+                id: composer-cache
+                uses: actions/cache@v4
+                with:
+                    path: vendor
+                    key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+                    restore-keys: |
+                        ${{ runner.os }}-php-
+
+            -   name: Install dependencies
+                run: composer install --prefer-dist --no-progress --ignore-platform-req=php+
+
+#            -   name: phpcs
+#                run: php vendor/bin/phpcs
+#
+#            -   name: phpstan
+#                run: php vendor/bin/phpstan analyze
+
+    test:
+        runs-on: ubuntu-latest
+        name: "Test | PHP ${{ matrix.php-version }}"
+        strategy:
+            matrix:
+                php-version:
+                    - "8.1"
+                    - "8.2"
+                    - "8.3"
+#                include:
+#                    - php-version: "8.4"
+#                      allow-failure: "true"
+#        continue-on-error: ${{ matrix.allow-failure == 'true' }}
+        steps:
+            -   uses: actions/checkout@v4
+
+            -   name: Install PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    coverage: pcov
+                    php-version: "${{ matrix.php-version }}"
+                    tools: composer:v2
+                    extensions: bcmath, gmp
+
+            -   name: Cache Composer packages
+                id: composer-cache
+                uses: actions/cache@v4
+                with:
+                    path: vendor
+                    key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+                    restore-keys: |
+                        ${{ runner.os }}-php-
+
+            -   name: Install dependencies
+                run: composer install --prefer-dist --no-progress --ignore-platform-req=php+
+
+            -   name: Run test suite
+                run: php vendor/bin/phpunit --coverage-text --coverage-clover=clover.xml
+
+#            -   name: Coveralls
+#                uses: coverallsapp/github-action@v2
+#                with:
+#                    file: clover.xml
+#                    format: clover
+#                    parallel: true
+
+#    finish:
+#        needs: test
+#        if: ${{ always() }}
+#        runs-on: ubuntu-latest
+#        steps:
+#            -   name: Coveralls Finished
+#                uses: coverallsapp/github-action@v2
+#                with:
+#                    parallel-finished: true

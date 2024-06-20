@@ -1,8 +1,11 @@
 <?php
 
-use DrQue\PolynomialRegression;
+namespace DrQue\PolynomialRegression\Tests;
 
-class RSquaredTest extends \PHPUnit\Framework\TestCase
+use DrQue\PolynomialRegression;
+use PHPUnit\Framework\TestCase;
+
+class RSquaredTest extends TestCase
 {
 	public function testRsquared()
 	{
@@ -111,5 +114,3 @@ class RSquaredTest extends \PHPUnit\Framework\TestCase
 	}
 	
 }
-
-?>
