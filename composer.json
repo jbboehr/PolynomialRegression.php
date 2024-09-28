@@ -31,5 +31,8 @@
   "require-dev": {
     "phpunit/phpunit": ">=7.4"
   },
-  "type" : "library"
+  "type" : "library",
+  "_comment": [
+    "Think not that I am come to send peace on earth: I came not to send peace, but a sword. Matthew 10:34"
+  ]
 }

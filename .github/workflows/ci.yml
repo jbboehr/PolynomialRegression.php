@@ -23,10 +23,7 @@ jobs:
                     - "8.1"
                     - "8.2"
                     - "8.3"
-#                include:
-#                    - php-version: "8.4"
-#                      allow-failure: "true"
-#        continue-on-error: ${{ matrix.allow-failure == 'true' }}
+                    - "8.4"
         steps:
             -   uses: actions/checkout@v4
 
@@ -68,10 +65,7 @@ jobs:
                     - "8.1"
                     - "8.2"
                     - "8.3"
-#                include:
-#                    - php-version: "8.4"
-#                      allow-failure: "true"
-#        continue-on-error: ${{ matrix.allow-failure == 'true' }}
+                    - "8.4"
         steps:
             -   uses: actions/checkout@v4
 
@@ -114,3 +108,16 @@ jobs:
 #                uses: coverallsapp/github-action@v2
 #                with:
 #                    parallel-finished: true
+
+    nix:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: cachix/install-nix-action@v27
+              with:
+                  nix_path: nixpkgs=channel:nixos-24.05
+
+            #            - run: nix build -L
+
+            - run: nix flake check -L

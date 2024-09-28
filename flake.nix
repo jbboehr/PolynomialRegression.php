@@ -3,8 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    systems.url = "github:nix-systems/default";
     flake-utils = {
       url = "github:numtide/flake-utils";
+      inputs.systems.follows = "systems";
     };
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
@@ -19,6 +22,8 @@
   outputs = {
     self,
     nixpkgs,
+    nixpkgs-unstable,
+    systems,
     flake-utils,
     pre-commit-hooks,
     gitignore,
@@ -34,7 +39,7 @@
             enabled ++ [all.pcov];
         };
       pkgs = nixpkgs.legacyPackages.${system};
-      php = buildEnv pkgs.php81;
+      pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
       src = gitignore.lib.gitignoreSource ./.;
 
       pre-commit-check = pre-commit-hooks.lib.${system}.run {
@@ -43,29 +48,43 @@
           actionlint.enable = true;
           alejandra.enable = true;
           alejandra.excludes = ["\/vendor\/"];
-          mdl.enable = true;
-          mdl.excludes = ["LICENSE\.md"];
+          markdownlint.enable = true;
+          markdownlint.excludes = ["LICENSE\.md"];
+          markdownlint.settings.configuration = {
+            MD013 = {
+              line_length = 1488;
+            };
+          };
           shellcheck.enable = true;
         };
       };
+
+      makeShell = {php}:
+        pkgs.mkShell {
+          buildInputs = with pkgs; [
+            actionlint
+            alejandra
+            mdl
+            php
+            php.packages.composer
+            pre-commit
+          ];
+          shellHook = ''
+            ${pre-commit-check.shellHook}
+            export PATH="$PWD/vendor/bin:$PATH"
+          '';
+        };
     in rec {
       checks = {
         inherit pre-commit-check;
       };
 
-      devShells.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          actionlint
-          alejandra
-          mdl
-          php
-          php.packages.composer
-          pre-commit
-        ];
-        shellHook = ''
-          ${pre-commit-check.shellHook}
-          export PATH="$PWD/vendor/bin:$PATH"
-        '';
+      devShells = rec {
+        php81 = makeShell {php = pkgs.php81;};
+        php82 = makeShell {php = pkgs.php82;};
+        php83 = makeShell {php = pkgs.php83;};
+        php84 = makeShell {php = pkgs-unstable.php84;};
+        default = php81;
       };
 
       formatter = pkgs.alejandra;
