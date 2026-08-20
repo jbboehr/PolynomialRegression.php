@@ -287,6 +287,67 @@ class PolynomialRegression
     }
 
     /**
+     * Expand a number in scientific notation without converting it to a float.
+     *
+     * BCMath does not accept scientific notation, but fixed-point values should
+     * otherwise be passed through unchanged so BCMath retains their precision.
+     * @param mixed $number Number to normalize.
+     * @return string Number in fixed-point notation when expansion is needed.
+     */
+    private static function expandScientificNotation( $number )
+    {
+        if ( is_float( $number ) )
+        {
+            $float = $number;
+            $locale = localeconv();
+            $decimalPoint = $locale[ 'decimal_point' ];
+            $maximumPrecision = PHP_FLOAT_DIG + 2;
+
+            // Use the shortest representation that round-trips without loss.
+            for ( $precision = PHP_FLOAT_DIG; $precision <= $maximumPrecision; ++$precision )
+            {
+                $number = sprintf( '%.' . $precision . 'g', $float );
+
+                if ( ( '' !== $decimalPoint ) && ( '.' !== $decimalPoint ) )
+                    $number = str_replace( $decimalPoint, '.', $number );
+
+                if ( (float) $number === $float )
+                    break;
+            }
+        }
+        else
+            $number = (string) $number;
+
+        $number = trim( $number );
+
+        if ( ! preg_match( '/^([+-]?)(\d+(?:\.\d*)?|\.\d+)[eE]([+-]?\d+)$/', $number, $matches ) )
+            return $number;
+
+        $sign = $matches[ 1 ];
+        $mantissa = $matches[ 2 ];
+        $exponent = (int) $matches[ 3 ];
+        $decimalPosition = strpos( $mantissa, '.' );
+
+        if ( false === $decimalPosition )
+            $decimalPosition = strlen( $mantissa );
+
+        $digits = str_replace( '.', '', $mantissa );
+        $decimalPosition += $exponent;
+
+        if ( $decimalPosition <= 0 )
+            return $sign . '0.' . str_repeat( '0', -$decimalPosition ) . $digits;
+
+        if ( $decimalPosition >= strlen( $digits ) )
+            return $sign . $digits . str_repeat( '0', $decimalPosition - strlen( $digits ) );
+
+        return
+            $sign
+            . substr( $digits, 0, $decimalPosition )
+            . '.'
+            . substr( $digits, $decimalPosition );
+    }
+
+    /**
      * Add data.
      *
      * Add a data point to calculation.
@@ -302,6 +363,9 @@ class PolynomialRegression
         $weight = NULL;
         if ( NULL !== $this->weightingInterface ) {
             $weight = $this->weightingInterface->getWeight($this->index);
+
+            if ( NULL !== $weight )
+                $weight = self::expandScientificNotation( $weight );
         }
 
         // Remove the effect of the forced coefficient from this value.
@@ -324,7 +388,6 @@ class PolynomialRegression
             // Add weighting term (if applicable).
             if ( NULL !== $weight )
             {
-                $weight = number_format( $weight, bcscale(), '.', '' );
                 $accumulator = bcmul( $accumulator, $weight );
             }
 

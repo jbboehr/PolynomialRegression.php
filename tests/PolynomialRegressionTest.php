@@ -132,6 +132,126 @@ class PolynomialRegressionTest extends TestCase
         $this->assertEqualsWithDelta(2.0, (float) $coefficients[1], 0.000001);
     }
 
+    public function testFixedPointWeightIsNotRoundedToBcScale()
+    {
+        $previousScale = bcscale();
+        bcscale(2);
+
+        try {
+            $weighting = new class implements WeightingInterface {
+                public function getWeight($index)
+                {
+                    return 1 === $index ? '0.105' : '0.104';
+                }
+            };
+
+            $polynomialRegression = new PolynomialRegression(1);
+            $polynomialRegression->setWeighting($weighting);
+            $polynomialRegression->addData(0, 0);
+            $polynomialRegression->addData(0, 100);
+
+            $coefficient = $polynomialRegression->getCoefficients()[0];
+        } finally {
+            bcscale($previousScale);
+        }
+
+        $this->assertSame('50.00', $coefficient);
+    }
+
+    public function testFloatWeightPreservesAvailablePrecision()
+    {
+        $previousPrecision = ini_get('precision');
+        $previousScale = bcscale();
+
+        try {
+            ini_set('precision', '14');
+            bcscale(20);
+
+            $weighting = new class implements WeightingInterface {
+                public function getWeight($index)
+                {
+                    return 1 === $index ? 1.00000000000001 : 1.00000000000002;
+                }
+            };
+
+            $polynomialRegression = new PolynomialRegression(1);
+            $polynomialRegression->setWeighting($weighting);
+            $polynomialRegression->addData(0, 0);
+            $polynomialRegression->addData(0, '100000000000000');
+
+            $coefficient = $polynomialRegression->getCoefficients()[0];
+            $firstWeight = bcmul('1', '1.00000000000001');
+            $secondWeight = bcmul('1', '1.00000000000002');
+            $expected = bcdiv(
+                bcmul('100000000000000', $secondWeight),
+                bcadd($firstWeight, $secondWeight)
+            );
+        } finally {
+            bcscale($previousScale);
+            ini_set('precision', $previousPrecision);
+        }
+
+        $this->assertSame($expected, $coefficient);
+    }
+
+    public function testFloatWeightIsLocaleIndependent()
+    {
+        $previousLocale = setlocale(LC_NUMERIC, '0');
+        $previousScale = bcscale();
+        $locale = setlocale(LC_NUMERIC, 'de_DE.UTF-8', 'de_DE.utf8', 'de_DE');
+
+        if ( false === $locale )
+            $this->markTestSkipped('A locale with a comma decimal separator is not available.');
+
+        try {
+            bcscale(20);
+
+            $weighting = new class implements WeightingInterface {
+                public function getWeight($index)
+                {
+                    return 1e-7;
+                }
+            };
+
+            $polynomialRegression = new PolynomialRegression(1);
+            $polynomialRegression->setWeighting($weighting);
+            $polynomialRegression->addData(0, 10);
+
+            $coefficient = $polynomialRegression->getCoefficients()[0];
+        } finally {
+            bcscale($previousScale);
+            setlocale(LC_NUMERIC, $previousLocale);
+        }
+
+        $this->assertSame('10.00000000000000000000', $coefficient);
+    }
+
+    public function testWhitespacePaddedWeightIsAccepted()
+    {
+        $previousScale = bcscale();
+
+        try {
+            bcscale(2);
+
+            $weighting = new class implements WeightingInterface {
+                public function getWeight($index)
+                {
+                    return "\t1.0\n";
+                }
+            };
+
+            $polynomialRegression = new PolynomialRegression(1);
+            $polynomialRegression->setWeighting($weighting);
+            $polynomialRegression->addData(0, 10);
+
+            $coefficient = $polynomialRegression->getCoefficients()[0];
+        } finally {
+            bcscale($previousScale);
+        }
+
+        $this->assertSame('10.00', $coefficient);
+    }
+
     public function testCalculatingRSquared()
     {
 
