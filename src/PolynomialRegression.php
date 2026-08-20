@@ -13,7 +13,7 @@
 /*   + Changed to row-echelon method for solving matrix which is much      */
 /*     faster than the determinant method.                                 */
 /*  0.91 - 05/17/2013- QUE -                                               */
-/*   = Changed name to Polynonial regression as this is more fitting to    */
+/*   = Changed name to Polynomial regression as this is more fitting to    */
 /*     to the function.                                                    */
 /*  0.92 - 12/28/2013- QUE -                                               */
 /*   + Added forced offset.                                                */
@@ -35,6 +35,10 @@
 /*   + Slight improvement in data accumulation.                            */
 /*  1.2.1 - 2015/02/17 - QUE -                                             */
 /*   + Bug fix to LinearWeighting class.                                   */
+/*  1.3.0 - 2023-12-24 - QUE -                                             */
+/*    - Renamed.                                                           */
+/*    - Fixed includes.                                                    */
+/*    - Spelling fixes.                                                    */
 /*                                                                         */
 /* This project is maintained at:                                          */
 /*    http://PolynomialRegression.drque.net/                               */
@@ -42,7 +46,7 @@
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
 /* Polynomial regression class.                                            */
-/* Copyright (C) 2009, 2012-2015 Andrew Que                                */
+/* Copyright (C) 2009, 2012-2015, 2023 Andrew Que                          */
 /*                                                                         */
 /* This program is free software: you can redistribute it and/or modify    */
 /* it under the terms of the GNU General Public License as published by    */
@@ -59,7 +63,7 @@
 /*                                                                         */
 /* ----------------------------------------------------------------------- */
 /*                                                                         */
-/*                      (C) Copyright 2009, 2012-2015                      */
+/*                   (C) Copyright 2009, 2012-2015, 2023                   */
 /*                               Andrew Que                                */
 /*=========================================================================*/
 /**
@@ -72,9 +76,9 @@
  * @package PolynomialRegression
  * @author Andrew Que ({@link http://www.DrQue.net/})
  * @link http://PolynomialRegression.drque.net/ Project home page.
- * @copyright Copyright (c) 2009, 2012-2015, Andrew Que
+ * @copyright Copyright (c) 2009, 2012-2015, 2023, Andrew Que
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @version 1.2.1
+ * @version 1.3.0
  */
 
 namespace DrQue;
@@ -124,7 +128,7 @@ class PolynomialRegression
     private $forcedValue;
 
     /**
-     * @var integer The index of the current element.  Basiclly a count of data added.
+     * @var integer The index of the current element.  Basically a count of data added.
      */
     private $index = 0;
 
@@ -199,7 +203,7 @@ class PolynomialRegression
      * then this value.  If number is higher, data must be reset and
      * added again.
      * @param int $numberOfCoefficient Number of coefficients.
-     * @since Version 1.1
+     * @since 1.1
      */
     public function setNumberOfCoefficient( $numberOfCoefficient )
     {
@@ -212,7 +216,7 @@ class PolynomialRegression
      *
      * Returns the number of coefficients calculated.
      * @return int Number of coefficients.
-     * @since Version 1.1
+     * @since 1.1
      */
     public function getNumberOfCoefficient()
     {
@@ -228,7 +232,7 @@ class PolynomialRegression
      * known coefficient for a set of data.
      * @param int $coefficient Which coefficient to force.
      * @param float $value Value to force this coefficient.
-     * @since Version 1.0
+     * @since 1.0
      */
     public function setForcedCoefficient( $coefficient, $value )
     {
@@ -243,7 +247,7 @@ class PolynomialRegression
      * @param int $coefficient Which coefficient.
      * @return float Value of this force this coefficient.  Null if the
      *   coefficient isn't being forced.
-     * @since Version 1.1
+     * @since 1.1
      */
     public function getForcedCoefficient( $coefficient )
     {
@@ -262,7 +266,7 @@ class PolynomialRegression
      * interface.  An instance of this interface can be set here.
      * @param WeightingInterface $weightingInterface Instance of weighting system
      *   to be used.
-     * @since Version 1.2
+     * @since 1.2
      */
     public function setWeighting( WeightingInterface $weightingInterface )
     {
@@ -275,7 +279,7 @@ class PolynomialRegression
      * Return the current weighting interface being used.  Returns NULL if no
      * interface is used.
      * @return WeightingInterface
-     * @since Version 1.2
+     * @since 1.2
      */
     public function getWeighting()
     {
@@ -319,7 +323,10 @@ class PolynomialRegression
 
             // Add weighting term (if applicable).
             if ( NULL !== $weight )
+            {
+                $weight = number_format( $weight, bcscale(), '.', '' );
                 $accumulator = bcmul( $accumulator, $weight );
+            }
 
             $this->xPowers[ $index ] =
                 bcadd( $this->xPowers[ $index ], $accumulator );
@@ -512,17 +519,17 @@ class PolynomialRegression
         $numberOfCoefficient = count( $coefficients );
 
         $y = 0;
-        for ( $coefficentIndex = 0; $coefficentIndex < $numberOfCoefficient; ++$coefficentIndex )
+        for ( $coefficientIndex = 0; $coefficientIndex < $numberOfCoefficient; ++$coefficientIndex )
         {
-            // y += coefficients[ coefficentIndex ] * x^coefficentIndex
+            // y += coefficients[ coefficientIndex ] * x^coefficientIndex
             $y =
                 bcadd
                 (
                     $y,
                     bcmul
                     (
-                        $coefficients[ $coefficentIndex ],
-                        bcpow( $x, $coefficentIndex )
+                        $coefficients[ $coefficientIndex ],
+                        bcpow( $x, $coefficientIndex )
                     )
                 );
         }

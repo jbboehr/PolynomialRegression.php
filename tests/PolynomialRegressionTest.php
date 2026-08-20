@@ -3,6 +3,7 @@
 namespace DrQue\PolynomialRegression\Tests;
 
 use DrQue\PolynomialRegression;
+use DrQue\WeightingInterface;
 use PHPUnit\Framework\TestCase;
 
 class PolynomialRegressionTest extends TestCase
@@ -106,6 +107,29 @@ class PolynomialRegressionTest extends TestCase
         $this->assertEquals(0.60, round($coefficients[1], 2));
         $this->assertEquals(-5.97, round($coefficients[2], 2));
         $this->assertEquals(5.68, round($coefficients[3], 2));
+    }
+
+    public function testScientificNotationWeight()
+    {
+        bcscale(20);
+
+        $weighting = new class implements WeightingInterface {
+            public function getWeight($index)
+            {
+                return 1e-7;
+            }
+        };
+
+        $polynomialRegression = new PolynomialRegression(2);
+        $polynomialRegression->setWeighting($weighting);
+        $polynomialRegression->addData(1, 2);
+        $polynomialRegression->addData(2, 4);
+
+        $coefficients = $polynomialRegression->getCoefficients();
+
+        $this->assertSame($weighting, $polynomialRegression->getWeighting());
+        $this->assertEqualsWithDelta(0.0, (float) $coefficients[0], 0.000001);
+        $this->assertEqualsWithDelta(2.0, (float) $coefficients[1], 0.000001);
     }
 
     public function testCalculatingRSquared()
