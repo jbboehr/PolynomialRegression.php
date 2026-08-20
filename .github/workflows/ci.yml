@@ -10,64 +10,46 @@ on:
         branches:
             - master
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
 permissions:
     contents: read
 
 jobs:
-    lint:
-        runs-on: ubuntu-latest
-        name: "Lint | PHP ${{ matrix.php-version }}"
-        strategy:
-            matrix:
-                php-version:
-                    - "8.1"
-                    - "8.2"
-                    - "8.3"
-                    - "8.4"
+    composer:
+        name: Composer validation
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
         steps:
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@v6
 
             -   name: Install PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    coverage: "none"
-                    php-version: "${{ matrix.php-version }}"
+                    coverage: none
+                    php-version: "8.5"
                     tools: composer:v2
-                    extensions: bcmath, gmp
 
-            -   name: Validate composer.json and composer.lock
+            -   name: Validate Composer files
                 run: composer validate --strict
 
-            -   name: Cache Composer packages
-                id: composer-cache
-                uses: actions/cache@v4
-                with:
-                    path: vendor
-                    key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-                    restore-keys: |
-                        ${{ runner.os }}-php-
-
-            -   name: Install dependencies
-                run: composer install --prefer-dist --no-progress --ignore-platform-req=php+
-
-#            -   name: phpcs
-#                run: php vendor/bin/phpcs
-#
-#            -   name: phpstan
-#                run: php vendor/bin/phpstan analyze
-
     test:
-        runs-on: ubuntu-latest
         name: "Test | PHP ${{ matrix.php-version }}"
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
         strategy:
+            fail-fast: false
             matrix:
                 php-version:
                     - "8.1"
                     - "8.2"
                     - "8.3"
                     - "8.4"
+                    - "8.5"
         steps:
-            -   uses: actions/checkout@v4
+            -   uses: actions/checkout@v6
 
             -   name: Install PHP
                 uses: shivammathur/setup-php@v2
@@ -75,49 +57,33 @@ jobs:
                     coverage: pcov
                     php-version: "${{ matrix.php-version }}"
                     tools: composer:v2
-                    extensions: bcmath, gmp
+                    extensions: bcmath
+
+            -   name: Locate Composer cache
+                id: composer-cache
+                run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
             -   name: Cache Composer packages
-                id: composer-cache
-                uses: actions/cache@v4
+                uses: actions/cache@v5
                 with:
-                    path: vendor
-                    key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+                    path: ${{ steps.composer-cache.outputs.dir }}
+                    key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('composer.lock') }}
                     restore-keys: |
-                        ${{ runner.os }}-php-
+                        ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
 
             -   name: Install dependencies
-                run: composer install --prefer-dist --no-progress --ignore-platform-req=php+
+                run: composer install --prefer-dist --no-interaction --no-progress
 
             -   name: Run test suite
-                run: php vendor/bin/phpunit --coverage-text --coverage-clover=clover.xml
-
-#            -   name: Coveralls
-#                uses: coverallsapp/github-action@v2
-#                with:
-#                    file: clover.xml
-#                    format: clover
-#                    parallel: true
-
-#    finish:
-#        needs: test
-#        if: ${{ always() }}
-#        runs-on: ubuntu-latest
-#        steps:
-#            -   name: Coveralls Finished
-#                uses: coverallsapp/github-action@v2
-#                with:
-#                    parallel-finished: true
+                run: vendor/bin/phpunit --coverage-text
 
     nix:
-        runs-on: ubuntu-latest
+        name: Nix flake
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
         steps:
-            - uses: actions/checkout@v3
+            -   uses: actions/checkout@v6
 
-            - uses: cachix/install-nix-action@v27
-              with:
-                  nix_path: nixpkgs=channel:nixos-24.05
+            -   uses: cachix/install-nix-action@v31
 
-            #            - run: nix build -L
-
-            - run: nix flake check -L
+            -   run: nix flake check --print-build-logs

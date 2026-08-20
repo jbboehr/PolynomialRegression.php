@@ -20,7 +20,6 @@
   </source>
   <coverage includeUncoveredFiles="true">
     <report>
-      <clover outputFile="clover.xml"/>
       <text
               outputFile="php://stdout"
               showUncoveredFiles="true"

@@ -2,19 +2,10 @@
   description = "jbboehr/PolynomialRegression.php";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.05";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     systems.url = "github:nix-systems/default";
-    flake-utils = {
-      url = "github:numtide/flake-utils";
-      inputs.systems.follows = "systems";
-    };
-    pre-commit-hooks = {
-      url = "github:cachix/pre-commit-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    gitignore = {
-      url = "github:hercules-ci/gitignore.nix";
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -22,34 +13,20 @@
   outputs = {
     self,
     nixpkgs,
-    nixpkgs-unstable,
     systems,
-    flake-utils,
-    pre-commit-hooks,
-    gitignore,
-  }:
-    flake-utils.lib.eachDefaultSystem (system: let
-      buildEnv = php:
-        php.buildEnv {
-          extraConfig = "memory_limit = 2G";
-          extensions = {
-            enabled,
-            all,
-          }:
-            enabled ++ [all.pcov];
-        };
-      pkgs = nixpkgs.legacyPackages.${system};
-      pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
-      src = gitignore.lib.gitignoreSource ./.;
-
-      pre-commit-check = pre-commit-hooks.lib.${system}.run {
-        inherit src;
+    git-hooks,
+  }: let
+    forEachSystem = nixpkgs.lib.genAttrs (import systems);
+  in {
+    checks = forEachSystem (system: {
+      pre-commit-check = git-hooks.lib.${system}.run {
+        src = ./.;
         hooks = {
           actionlint.enable = true;
           alejandra.enable = true;
-          alejandra.excludes = ["\/vendor\/"];
+          alejandra.excludes = ["/vendor/"];
           markdownlint.enable = true;
-          markdownlint.excludes = ["LICENSE\.md"];
+          markdownlint.excludes = ["LICENSE\\.md"];
           markdownlint.settings.configuration = {
             MD013 = {
               line_length = 1488;
@@ -58,35 +35,45 @@
           shellcheck.enable = true;
         };
       };
-
-      makeShell = {php}:
-        pkgs.mkShell {
-          buildInputs = with pkgs; [
-            actionlint
-            alejandra
-            mdl
-            php
-            php.packages.composer
-            pre-commit
-          ];
-          shellHook = ''
-            ${pre-commit-check.shellHook}
-            export PATH="$PWD/vendor/bin:$PATH"
-          '';
-        };
-    in rec {
-      checks = {
-        inherit pre-commit-check;
-      };
-
-      devShells = rec {
-        php81 = makeShell {php = pkgs.php81;};
-        php82 = makeShell {php = pkgs.php82;};
-        php83 = makeShell {php = pkgs.php83;};
-        php84 = makeShell {php = pkgs-unstable.php84;};
-        default = php81;
-      };
-
-      formatter = pkgs.alejandra;
     });
+
+    devShells = forEachSystem (
+      system: let
+        pkgs = nixpkgs.legacyPackages.${system};
+        pre-commit-check = self.checks.${system}.pre-commit-check;
+
+        buildEnv = php:
+          php.buildEnv {
+            extraConfig = "memory_limit = 2G";
+            extensions = {
+              enabled,
+              all,
+            }:
+              enabled ++ [all.pcov];
+          };
+
+        makeShell = php:
+          pkgs.mkShell {
+            packages =
+              pre-commit-check.enabledPackages
+              ++ [
+                php
+                php.packages.composer
+              ];
+            shellHook = ''
+              ${pre-commit-check.shellHook}
+              export PATH="$PWD/vendor/bin:$PATH"
+            '';
+          };
+      in rec {
+        php82 = makeShell (buildEnv pkgs.php82);
+        php83 = makeShell (buildEnv pkgs.php83);
+        php84 = makeShell (buildEnv pkgs.php84);
+        php85 = makeShell (buildEnv pkgs.php85);
+        default = php82;
+      }
+    );
+
+    formatter = forEachSystem (system: nixpkgs.legacyPackages.${system}.alejandra);
+  };
 }
